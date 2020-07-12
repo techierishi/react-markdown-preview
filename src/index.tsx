@@ -5,8 +5,12 @@ import 'prismjs/components/prism-markup';
 import ReactMarkdown, { ReactMarkdownProps } from 'react-markdown';
 import allowNode from './allowNode';
 import { loadLang } from './langs';
+import SynHi from './SynHi'
 import './styles/markdown.less';
 import './styles/markdowncolor.less';
+import styled from 'styled-components'
+
+const JsxParser =  require('react-jsx-parser');
 
 export type {
   ReactMarkdownProps,
@@ -21,6 +25,9 @@ export type {
   Renderers,
 } from 'react-markdown';
 
+
+
+
 export interface IMarkdownPreviewProps extends Omit<ReactMarkdownProps, 'className'> {
   prefixCls?: string;
   className?: string;
@@ -32,6 +39,19 @@ export interface IMarkdownPreviewProps extends Omit<ReactMarkdownProps, 'classNa
 export interface IMarkdownPreviewState {
   value?: string;
 }
+
+export function TestComp(props: any) {
+
+  return (<div>Test Comp <button>Submit</button>
+  </div>)
+}
+
+
+const PieChart = styled(TestComp)`
+  width: 100px;
+  height: 100px;
+`
+
 
 export default class MarkdownPreview extends Component<IMarkdownPreviewProps, IMarkdownPreviewState> {
   public mdp = React.createRef<HTMLDivElement>();
@@ -81,12 +101,33 @@ export default class MarkdownPreview extends Component<IMarkdownPreviewProps, IM
       }
     }
   }
+
+   components = {
+    PieChart
+  }
+
+  renderers = {
+    code: ({ language, value }: { language: any, value: any }) => {
+      console.log("encdec", language, value);
+
+      if(language && value){
+        if (language === 'encdec') {
+          return <div className="encDecWrapper"> <span>{value}</span> <span><button>Save</button></span></div>
+        }
+      }
+      
+
+      return (language && value) ? <SynHi language={language}>{value}</SynHi> : <span />
+    }
+  }
+
+
   render() {
     const { className, style, onScroll, onMouseOver, ...other } = this.props;
     const cls = classnames(className, 'wmde-markdown', 'wmde-markdown-color');
     return (
       <div ref={this.mdp} onScroll={onScroll} style={style} onMouseOver={onMouseOver} className={cls} >
-        <ReactMarkdown escapeHtml={false} allowNode={allowNode} {...other} source={this.state.value} />
+        <ReactMarkdown escapeHtml={false} allowNode={allowNode} {...other} source={this.state.value} renderers={this.renderers as any} />
       </div>
     );
   }
